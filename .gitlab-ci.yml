@@ -1,0 +1,38 @@
+image: node:alpine
+
+stages:
+  - build
+  - deploy
+
+.install: &install
+  before_script:
+    - npm ci
+    - npm i -g vuepress
+
+build:
+  stage: build
+  <<: *install
+  script:
+    - npm run build
+  artifacts:
+    paths:
+    - docs/.vuepress/dist
+    expire_in: 30 min
+  only:
+    - dev
+
+pages:
+  stage: deploy
+  script:
+    - rm -rf public
+    - mv docs/.vuepress/dist public
+  artifacts:
+    paths:
+      - public
+  dependencies:
+    - build
+  environment:
+    name: staging
+    url: https://gitlab.com/mst-dev-ops/presentations
+  only:
+    - dev
